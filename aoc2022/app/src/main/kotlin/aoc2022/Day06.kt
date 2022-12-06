@@ -22,11 +22,28 @@
 
 package aoc2022
 
-fun main() {
-    solveDay01()
-    solveDay02()
-    solveDay03()
-    solveDay04()
-    solveDay05()
-    solveDay06()
+import java.io.File
+
+fun solveDay06() {
+    drawSeparator()
+    for (dft in DataFileType.values()) {
+        solveDay06Internal(dft)
+    }
+}
+
+private fun solveDay06Internal(dft: DataFileType) {
+    File(getDataFilePath(6, dft)).forEachLine {
+        if (it.isNotBlank()) {
+            println("Type: ${dft.value}. Part 1: ${firstPos(it, 4)}. Part 2: ${firstPos(it, 14)}")
+        }
+    }
+}
+
+private fun firstPos(str: String, size: Int): Int {
+    for (i in size until str.length) {
+        if (str.substring(i - size, i).toSet().size == size) {
+            return i
+        }
+    }
+    return -1
 }
