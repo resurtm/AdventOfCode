@@ -33,6 +33,7 @@ private fun solveDay07Internal(dft: DataFileType) {
         DirTree.parseLine(it)
     }
     DirTree.printNodes()
+    DirTree.findBigDirs()
 }
 
 private enum class TreeNodeType(val type: String) {
@@ -41,33 +42,48 @@ private enum class TreeNodeType(val type: String) {
 }
 
 private data class TreeNode(
-    val parent: TreeNode?,
+    val parent: TreeNode? = null,
     val name: String,
-    val size: Int,
+    val size: Int = 0,
+    var sizeTotal: Int? = null,
     val type: TreeNodeType,
-    val dirs: MutableList<TreeNode>,
-    val files: MutableList<TreeNode>
+    val dirs: MutableList<TreeNode> = mutableListOf(),
+    val files: MutableList<TreeNode> = mutableListOf()
 ) {
     override fun toString(): String {
         val sizePart = when (type) {
             TreeNodeType.FILE -> ", size=$size"
             else -> ""
         }
-        return "- $name (${type.type}$sizePart)"
+        return "- $name (${type.type}$sizePart, total=${this.calcTotalSize()})"
     }
 
     fun toString(tab: Int) = "${" ".repeat(tab)}$this"
+
+    fun calcTotalSize(): Int {
+        var result = sizeTotal
+        if (result == null) {
+            result = calcTotalSizeInternal(this)
+        }
+        sizeTotal = result
+        return result
+    }
+
+    private fun calcTotalSizeInternal(currNode: TreeNode): Int {
+        var result = 0
+
+        val fileSizes = currNode.files.map { it.size }
+        result += if (fileSizes.isEmpty()) 0 else fileSizes.reduce { acc, size -> acc + size }
+
+        val dirSizes = currNode.dirs.map { it.calcTotalSize() }
+        result += if (dirSizes.isEmpty()) 0 else dirSizes.reduce { acc, size -> acc + size }
+
+        return result
+    }
 }
 
 private object DirTree {
-    private var rootNode = TreeNode(
-        parent = null,
-        name = "/",
-        size = 0,
-        type = TreeNodeType.DIR,
-        dirs = mutableListOf(),
-        files = mutableListOf()
-    )
+    private var rootNode = TreeNode(name = "/", type = TreeNodeType.DIR)
     private var currNode = rootNode
 
     fun parseLine(line: String) {
@@ -112,27 +128,13 @@ private object DirTree {
     }
 
     private fun addDir(name: String): TreeNode {
-        val newDir = TreeNode(
-            parent = currNode,
-            name = name,
-            size = 0,
-            type = TreeNodeType.DIR,
-            dirs = mutableListOf(),
-            files = mutableListOf()
-        )
+        val newDir = TreeNode(parent = currNode, name = name, type = TreeNodeType.DIR)
         currNode.dirs.add(newDir)
         return newDir
     }
 
     private fun addFile(name: String, size: Int): TreeNode {
-        val newFile = TreeNode(
-            parent = currNode,
-            name = name,
-            size = size,
-            type = TreeNodeType.FILE,
-            dirs = mutableListOf(),
-            files = mutableListOf()
-        )
+        val newFile = TreeNode(parent = currNode, name = name, size = size, type = TreeNodeType.FILE)
         currNode.files.add(newFile)
         return newFile
     }
@@ -145,5 +147,18 @@ private object DirTree {
         println(treeNode.toString(tab))
         treeNode.dirs.forEach { printNode(it, tab + 2) }
         treeNode.files.forEach { printNode(it, tab + 2) }
+    }
+
+    fun findBigDirs() {
+        val bigDirs = mutableListOf<TreeNode>()
+        findBigDirsInternal(bigDirs, rootNode)
+        println(bigDirs.map { it.calcTotalSize() }.reduce { acc, i -> acc + i })
+    }
+
+    private fun findBigDirsInternal(accum: MutableList<TreeNode>, node: TreeNode) {
+        if (node.calcTotalSize() <= 100000) {
+            accum.add(node)
+        }
+        node.dirs.forEach { findBigDirsInternal(accum, it) }
     }
 }
