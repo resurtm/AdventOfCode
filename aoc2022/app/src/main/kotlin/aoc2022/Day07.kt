@@ -25,7 +25,7 @@ package aoc2022
 import java.io.File
 
 fun solveDay07() {
-    solveDay07Internal(DataFileType.EXAMPLE)
+    solveDay07Internal(DataFileType.GOOGLE)
 }
 
 private fun solveDay07Internal(dft: DataFileType) {
@@ -34,6 +34,7 @@ private fun solveDay07Internal(dft: DataFileType) {
     }
     DirTree.printNodes()
     DirTree.findBigDirs()
+    DirTree.findDeletable()
 }
 
 private enum class TreeNodeType(val type: String) {
@@ -48,7 +49,8 @@ private data class TreeNode(
     var sizeTotal: Int? = null,
     val type: TreeNodeType,
     val dirs: MutableList<TreeNode> = mutableListOf(),
-    val files: MutableList<TreeNode> = mutableListOf()
+    val files: MutableList<TreeNode> = mutableListOf(),
+    var include: Boolean = true
 ) {
     override fun toString(): String {
         val sizePart = when (type) {
@@ -61,12 +63,19 @@ private data class TreeNode(
     fun toString(tab: Int) = "${" ".repeat(tab)}$this"
 
     fun calcTotalSize(): Int {
-        var result = sizeTotal
-        if (result == null) {
-            result = calcTotalSizeInternal(this)
+        if (!include) {
+            sizeTotal = 0
+            return 0
         }
+        val result = calcTotalSizeInternal(this)
         sizeTotal = result
         return result
+//        var result = sizeTotal
+//        if (result == null) {
+//            result = calcTotalSizeInternal(this)
+//        }
+//        sizeTotal = result
+//        return result
     }
 
     private fun calcTotalSizeInternal(currNode: TreeNode): Int {
@@ -160,5 +169,34 @@ private object DirTree {
             accum.add(node)
         }
         node.dirs.forEach { findBigDirsInternal(accum, it) }
+    }
+
+    fun findDeletable() {
+        println(rootNode.calcTotalSize())
+        val accum = mutableListOf<TreeNode>()
+        findDeletableInternal(accum, rootNode)
+        accum.sortBy { it.calcTotalSize() }
+        println(accum)
+
+        var prev = rootNode
+        for (it in accum) {
+            it.include = false
+            if (rootNode.calcTotalSize() < 70000000 - 30000000) {
+                prev = it
+                break
+            }
+            it.include = true
+        }
+
+        for (it in accum) {
+            it.include = true
+        }
+        println(rootNode.calcTotalSize())
+        println(prev.calcTotalSize())
+    }
+
+    private fun findDeletableInternal(accum: MutableList<TreeNode>, node: TreeNode) {
+        accum.add(node)
+        node.dirs.forEach { findDeletableInternal(accum, it) }
     }
 }
