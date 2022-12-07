@@ -60,73 +60,81 @@ private data class TreeNode(
 }
 
 private object DirTree {
-    private fun getDefaultDir() = ArrayDeque(listOf("/"))
-    private var currDir = getDefaultDir()
-    private var rootNode = TreeNode(null, "/", 0, TreeNodeType.DIR, mutableListOf(), mutableListOf())
+    private var rootNode = TreeNode(
+        parent = null,
+        name = "/",
+        size = 0,
+        type = TreeNodeType.DIR,
+        dirs = mutableListOf(),
+        files = mutableListOf()
+    )
     private var currNode = rootNode
 
     fun parseLine(line: String) {
         if (line.first() == '$') parseCommand(line) else parseOutput(line)
     }
 
-    private fun parseCommand(rawCmd: String) {
-        val cmdParts = rawCmd.trimStart('$', ' ').split(' ')
-        when (cmdParts.first()) {
-            "cd" -> parseCommandCd(cmdParts.subList(1, cmdParts.size))
-            "ls" -> parseCommandLs()
-            else -> throw Exception("Cannot parse command: '$rawCmd'.")
+    private fun parseCommand(cmd: String) {
+        val parts = cmd.trimStart('$', ' ').split(' ')
+        when (parts[0]) {
+            "cd" -> parseCommandCd(parts[1])
+            "ls" -> {}
+            else -> throw Exception("Cannot parse command: '$cmd'.")
         }
     }
 
-    private fun parseCommandCd(parts: Collection<String>) {
-        when (val dirName = parts.first()) {
+    private fun parseCommandCd(dirName: String) {
+        when (dirName) {
             "/" -> {
-                currDir = getDefaultDir()
                 currNode = rootNode
             }
 
             ".." -> {
-                currDir.removeLast()
                 val parent = currNode.parent
                 if (parent == null) throw Exception("Cannot move level up from root dir.")
                 else currNode = parent
             }
 
             else -> {
-                currDir.addLast(dirName)
-                currNode.dirs.forEach {
-                    if (it.name == dirName) {
-                        currNode = it
-                        return@forEach
-                    }
-                }
+                var subDir = currNode.dirs.find { it.name == dirName }
+                if (subDir == null) subDir = addDir(dirName)
+                currNode = subDir
             }
         }
     }
 
-    private fun parseCommandLs() {
-        // do nothing
-    }
-
-    private fun parseOutput(rawOutLine: String) {
-        val outLineParts = rawOutLine.split(' ')
-        val rest = outLineParts.subList(1, outLineParts.size)
-        when (outLineParts.first()) {
-            "dir" -> parseOutputDir(rest)
-            else -> parseOutputFile(outLineParts)
+    private fun parseOutput(outLine: String) {
+        val parts = outLine.split(' ')
+        when (parts[0]) {
+            "dir" -> addDir(parts[1])
+            else -> addFile(parts[1], parts[0].toInt())
         }
     }
 
-    private fun parseOutputDir(parts: Collection<String>) {
-        currNode.dirs.add(
-            TreeNode(currNode, parts.first(), 0, TreeNodeType.DIR, mutableListOf(), mutableListOf())
+    private fun addDir(name: String): TreeNode {
+        val newDir = TreeNode(
+            parent = currNode,
+            name = name,
+            size = 0,
+            type = TreeNodeType.DIR,
+            dirs = mutableListOf(),
+            files = mutableListOf()
         )
+        currNode.dirs.add(newDir)
+        return newDir
     }
 
-    private fun parseOutputFile(parts: List<String>) {
-        currNode.files.add(
-            TreeNode(currNode, parts[1], parts[0].toInt(), TreeNodeType.FILE, mutableListOf(), mutableListOf())
+    private fun addFile(name: String, size: Int): TreeNode {
+        val newFile = TreeNode(
+            parent = currNode,
+            name = name,
+            size = size,
+            type = TreeNodeType.FILE,
+            dirs = mutableListOf(),
+            files = mutableListOf()
         )
+        currNode.files.add(newFile)
+        return newFile
     }
 
     fun printNodes() {
