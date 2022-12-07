@@ -25,7 +25,6 @@ package aoc2022
 import java.io.File
 
 fun solveDay06() {
-    drawSeparator()
     for (dft in DataFileType.values()) {
         solveDay06Internal(dft)
     }

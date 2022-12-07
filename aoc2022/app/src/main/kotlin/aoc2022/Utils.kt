@@ -34,8 +34,3 @@ fun getDataFilePath(dayCount: Short, dft: DataFileType): String {
     val absPath = Paths.get("").toAbsolutePath().toString()
     return "$absPath/aoc2022/data/day${dayCount.toString().padStart(2, '0')}/input-${dft.value}.txt"
 }
-
-fun drawSeparator() {
-    println("=".repeat(20))
-}
-

@@ -23,10 +23,23 @@
 package aoc2022
 
 fun main() {
+    drawSeparator()
     solveDay01()
+    drawSeparator()
     solveDay02()
+    drawSeparator()
     solveDay03()
+    drawSeparator()
     solveDay04()
+    drawSeparator()
     solveDay05()
+    drawSeparator()
     solveDay06()
+    drawSeparator()
+    solveDay07()
+    drawSeparator()
+}
+
+private fun drawSeparator() {
+    println("=".repeat(20))
 }
