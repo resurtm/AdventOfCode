@@ -23,7 +23,7 @@
 package aoc2022
 
 fun main() {
-    drawSeparator()
+//    drawSeparator()
 //    solveDay01()
 //    drawSeparator()
 //    solveDay02()
@@ -36,7 +36,9 @@ fun main() {
 //    drawSeparator()
 //    solveDay06()
 //    drawSeparator()
-    solveDay07()
+//    solveDay07()
+    drawSeparator()
+    solveDay08()
     drawSeparator()
 }
 
