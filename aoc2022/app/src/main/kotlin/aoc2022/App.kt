@@ -40,6 +40,8 @@ fun main() {
     drawSeparator()
     solveDay08()
     drawSeparator()
+    solveDay09()
+    drawSeparator()
 }
 
 private fun drawSeparator() {
