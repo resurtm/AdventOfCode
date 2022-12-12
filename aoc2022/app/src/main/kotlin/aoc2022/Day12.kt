@@ -27,7 +27,7 @@ import java.io.File
 fun solveDay12() {
     Solution().readFile(DataFileType.EXAMPLE).solve()
     Solution().readFile(DataFileType.GITHUB).solve()
-//    Solution().readFile(DataFileType.GOOGLE).solve()
+    Solution().readFile(DataFileType.GOOGLE).solve()
 }
 
 private class Solution {
@@ -50,26 +50,40 @@ private class Solution {
     private var endPos = Vector()
 
     fun solve() {
-        var lastNode = followPath()
-        var size = 0
-        while (lastNode.parent != null) {
-            size++
-            val nextNode = lastNode.parent
-            if (nextNode != null) lastNode = nextNode
+        var lastNode1 = followPath(null)
+        var size1 = 0
+        while (lastNode1.parent != null) {
+            size1++
+            val nextNode = lastNode1.parent
+            if (nextNode != null) lastNode1 = nextNode
         }
-        println("Day 12. Part 1: $size.")
+
+        var lastNode2 = followPath('a')
+        var size2 = 0
+        while (lastNode2.parent != null) {
+            size2++
+            val nextNode = lastNode2.parent
+            if (nextNode != null) lastNode2 = nextNode
+        }
+
+        println("Day 12. Part 1: $size1. Part 2: $size2.")
     }
 
-    fun followPath(): Node {
+    private fun followPath(lookFor: Char?): Node {
+        grid.forEach { row -> row.forEach { it.visited = false } }
+
         val queue = mutableListOf<Node>()
 
-        val rootNode = grid[startPos.y][startPos.x]
+        val rootNode = grid[endPos.y][endPos.x]
         rootNode.visited = true
         queue.add(rootNode)
 
         while (queue.isNotEmpty()) {
             val curr = queue.removeFirst()
-            if (curr.pos == endPos) {
+            if (lookFor == null && curr.pos == startPos) {
+                return curr
+            }
+            if (lookFor == curr.ch) {
                 return curr
             }
 
@@ -101,7 +115,7 @@ private class Solution {
         return result
     }
 
-    private fun canMove(pos1: Vector, pos2: Vector): Boolean {
+    private fun canMove(pos2: Vector, pos1: Vector): Boolean {
         val diff = grid[pos2.y][pos2.x].ch - grid[pos1.y][pos1.x].ch
         return diff <= 1
     }
