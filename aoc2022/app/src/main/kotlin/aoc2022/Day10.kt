@@ -25,17 +25,35 @@ package aoc2022
 import java.io.File
 
 fun solveDay10() {
-    Day10Solution(DataFileType.EXAMPLE).readFile().solve()
-    Day10Solution(DataFileType.GOOGLE).readFile().solve()
+    Day10Solution(DataFileType.EXAMPLE).readFile().solvePart1()
+    Day10Solution(DataFileType.EXAMPLE).readFile().solvePart2()
+    Day10Solution(DataFileType.GOOGLE).readFile().solvePart1()
+    Day10Solution(DataFileType.GOOGLE).readFile().solvePart2()
+    Day10Solution(DataFileType.GITHUB).readFile().solvePart1()
+    Day10Solution(DataFileType.GITHUB).readFile().solvePart2()
 }
 
 private class Day10Solution(val dft: DataFileType) {
     private val instructions = mutableListOf<Instruction>()
     private var cycle = 0
+    private var cycle2 = 0
     private var xVal = 1
     private var result = 0
 
-    fun solve() {
+    fun solvePart2() {
+        instructions.forEach {
+            when (it.op) {
+                OpType.NOOP -> incrementCycle(true)
+                OpType.ADDX -> {
+                    incrementCycle(true)
+                    incrementCycle(true)
+                    xVal += it.arg
+                }
+            }
+        }
+    }
+
+    fun solvePart1() {
         instructions.forEach {
             when (it.op) {
                 OpType.NOOP -> incrementCycle()
@@ -49,8 +67,16 @@ private class Day10Solution(val dft: DataFileType) {
         println("Day 10. Type: ${dft}/${dft.value}. Part 1: $result.")
     }
 
-    private fun incrementCycle() {
+    private fun incrementCycle(draw: Boolean = false) {
+        if (draw) {
+            if (xVal == cycle2 || xVal == cycle2 + 1 || xVal == cycle2 - 1) print('#') else print('.')
+            if ((cycle2 + 1) % 40 == 0) {
+                println()
+                cycle2 = -1
+            }
+        }
         cycle++
+        cycle2++
         if (cycle == 20 || cycle == 60 || cycle == 100 || cycle == 140 || cycle == 180 || cycle == 220) {
             result += cycle * xVal
         }
