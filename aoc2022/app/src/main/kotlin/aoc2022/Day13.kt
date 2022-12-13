@@ -31,45 +31,36 @@ import java.io.File
 import java.lang.reflect.Type
 
 fun solveDay13() {
-    Day13Solution(DataFileType.EXAMPLE).readFile().solve()
-    Day13Solution(DataFileType.GITHUB).readFile().solve()
+    Day13Solution(DataFileType.EXAMPLE).readFile().solvePart1().solvePart2()
+    Day13Solution(DataFileType.GITHUB).readFile().solvePart1().solvePart2()
+    Day13Solution(DataFileType.GOOGLE).readFile().solvePart1().solvePart2()
 }
 
 private class Day13Solution(val dft: DataFileType) {
-    fun solve() {
+    fun solvePart1(): Day13Solution {
         var result = 0
         lists.forEachIndexed { index, pair ->
             if (checkPair(pair) == true) result += index + 1
         }
         println("Day 13. Type: $dft/${dft.value}. Part 1: $result.")
+        return this
     }
 
-    private fun checkPair(pair: Pair<List<ListItem>, List<ListItem>>): Boolean? {
-        var index = 0
-        while (true) {
-            val first = pair.first.getOrNull(index)
-            val second = pair.second.getOrNull(index++)
-            if (first == null && second != null) {
-                return true
-            }
-            if (second == null && first != null) {
-                return false
-            }
-            if (second == null || first == null) {
-                break
-            }
+    fun solvePart2() {
+        val newP1 = listOf(ListItem(vector = listOf(ListItem(scalar = 2))))
+        val newP2 = listOf(ListItem(vector = listOf(ListItem(scalar = 6))))
 
-            if (first.scalar != null && second.scalar != null) {
-                if (first.scalar < second.scalar) return true
-                if (first.scalar > second.scalar) return false
-            } else {
-                val newFirst = first.vector ?: listOf(ListItem(scalar = first.scalar))
-                val newSecond = second.vector ?: listOf(ListItem(scalar = second.scalar))
-                val result = checkPair(Pair(newFirst, newSecond))
-                if (result != null) return result
-            }
+        var newPos1 = -1
+        var newPos2 = -1
+
+        rawLists.add(newP1)
+        rawLists.add(newP2)
+        rawLists.sortWith(Day13Solution)
+        rawLists.forEachIndexed { index, lst ->
+            if (lst == newP1) newPos1 = index + 1
+            if (lst == newP2) newPos2 = index + 1
         }
-        return null
+        println("Day 13. Type: $dft/${dft.value}. Part 2: ${newPos1 * newPos2}.")
     }
 
     fun readFile(): Day13Solution {
@@ -77,22 +68,27 @@ private class Day13Solution(val dft: DataFileType) {
         return this
     }
 
-    private fun parseLine(inputLine: String) = when (readState) {
-        ReadState.FIRST_LIST -> {
-            firstList = parseLineWithList(inputLine)
-            readState = ReadState.SECOND_LIST
-        }
+    private fun parseLine(inputLine: String) {
+        val rawParsed = parseLineWithList(inputLine)
+        if (rawParsed != null) rawLists.add(rawParsed)
 
-        ReadState.SECOND_LIST -> {
-            secondList = parseLineWithList(inputLine)
-            if (firstList != null && secondList != null) {
-                lists.add(Pair(firstList as List<ListItem>, secondList as List<ListItem>))
+        when (readState) {
+            ReadState.FIRST_LIST -> {
+                firstList = parseLineWithList(inputLine)
+                readState = ReadState.SECOND_LIST
             }
-            readState = ReadState.SEPARATOR
-        }
 
-        ReadState.SEPARATOR -> {
-            readState = ReadState.FIRST_LIST
+            ReadState.SECOND_LIST -> {
+                secondList = parseLineWithList(inputLine)
+                if (firstList != null && secondList != null) {
+                    lists.add(Pair(firstList as List<ListItem>, secondList as List<ListItem>))
+                }
+                readState = ReadState.SEPARATOR
+            }
+
+            ReadState.SEPARATOR -> {
+                readState = ReadState.FIRST_LIST
+            }
         }
     }
 
@@ -105,12 +101,13 @@ private class Day13Solution(val dft: DataFileType) {
     }
 
     private val lists = mutableListOf<Pair<List<ListItem>, List<ListItem>>>()
+    private val rawLists = mutableListOf<List<ListItem>>()
 
     private var readState = ReadState.FIRST_LIST
     private var firstList: List<ListItem>? = null
     private var secondList: List<ListItem>? = null
 
-    private data class ListItem(
+    data class ListItem(
         val scalar: Int? = null,
         val vector: List<ListItem>? = null
     )
@@ -134,4 +131,42 @@ private class Day13Solution(val dft: DataFileType) {
     }
 
     private enum class ReadState { FIRST_LIST, SECOND_LIST, SEPARATOR }
+
+    private companion object : Comparator<List<ListItem>> {
+        override fun compare(a: List<ListItem>, b: List<ListItem>): Int {
+            return when (checkPair(Pair(a, b))) {
+                true -> -1
+                false -> 1
+                null -> 0
+            }
+        }
+    }
+}
+
+private fun checkPair(pair: Pair<List<Day13Solution.ListItem>, List<Day13Solution.ListItem>>): Boolean? {
+    var index = 0
+    while (true) {
+        val first = pair.first.getOrNull(index)
+        val second = pair.second.getOrNull(index++)
+        if (first == null && second != null) {
+            return true
+        }
+        if (second == null && first != null) {
+            return false
+        }
+        if (second == null || first == null) {
+            break
+        }
+
+        if (first.scalar != null && second.scalar != null) {
+            if (first.scalar < second.scalar) return true
+            if (first.scalar > second.scalar) return false
+        } else {
+            val newFirst = first.vector ?: listOf(Day13Solution.ListItem(scalar = first.scalar))
+            val newSecond = second.vector ?: listOf(Day13Solution.ListItem(scalar = second.scalar))
+            val result = checkPair(Pair(newFirst, newSecond))
+            if (result != null) return result
+        }
+    }
+    return null
 }
