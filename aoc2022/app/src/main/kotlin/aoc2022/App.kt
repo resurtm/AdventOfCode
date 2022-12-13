@@ -41,8 +41,10 @@ fun main() {
 //    solveDay08()
 //    drawSeparator()
 //    solveDay09()
+//    drawSeparator()
+//    solveDay12()
     drawSeparator()
-    solveDay12()
+    solveDay13()
     drawSeparator()
 }
 

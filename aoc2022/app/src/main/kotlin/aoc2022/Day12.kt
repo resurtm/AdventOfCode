@@ -25,12 +25,12 @@ package aoc2022
 import java.io.File
 
 fun solveDay12() {
-    Solution().readFile(DataFileType.EXAMPLE).solve()
-    Solution().readFile(DataFileType.GITHUB).solve()
-    Solution().readFile(DataFileType.GOOGLE).solve()
+    Day12Solution().readFile(DataFileType.EXAMPLE).solve()
+    Day12Solution().readFile(DataFileType.GITHUB).solve()
+    Day12Solution().readFile(DataFileType.GOOGLE).solve()
 }
 
-private class Solution {
+private class Day12Solution {
     data class Vector(val x: Int = 0, val y: Int = 0) {
         override fun toString(): String = "${x}x${y}"
     }
@@ -120,7 +120,7 @@ private class Solution {
         return diff <= 1
     }
 
-    fun readFile(dft: DataFileType): Solution {
+    fun readFile(dft: DataFileType): Day12Solution {
         var j = 0
         File(getDataFilePath(12, dft)).forEachLine { parseLine(it, j++) }
         gridSize = Vector(grid[0].size, grid.size)
