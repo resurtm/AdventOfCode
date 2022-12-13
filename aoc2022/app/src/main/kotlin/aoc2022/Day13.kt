@@ -31,18 +31,48 @@ import java.io.File
 import java.lang.reflect.Type
 
 fun solveDay13() {
-    Day13Solution().readFile(DataFileType.EXAMPLE).solve()
-//    Day13Solution().readFile(DataFileType.GITHUB)
-//    Day13Solution().readFile(DataFileType.GOOGLE)
+    Day13Solution(DataFileType.EXAMPLE).readFile().solve()
+    Day13Solution(DataFileType.GITHUB).readFile().solve()
 }
 
-private class Day13Solution {
+private class Day13Solution(val dft: DataFileType) {
     fun solve() {
-        println(lists[1].first)
-        println(lists[1].second)
+        var result = 0
+        lists.forEachIndexed { index, pair ->
+            if (checkPair(pair) == true) result += index + 1
+        }
+        println("Day 13. Type: $dft/${dft.value}. Part 1: $result.")
     }
 
-    fun readFile(dft: DataFileType): Day13Solution {
+    private fun checkPair(pair: Pair<List<ListItem>, List<ListItem>>): Boolean? {
+        var index = 0
+        while (true) {
+            val first = pair.first.getOrNull(index)
+            val second = pair.second.getOrNull(index++)
+            if (first == null && second != null) {
+                return true
+            }
+            if (second == null && first != null) {
+                return false
+            }
+            if (second == null || first == null) {
+                break
+            }
+
+            if (first.scalar != null && second.scalar != null) {
+                if (first.scalar < second.scalar) return true
+                if (first.scalar > second.scalar) return false
+            } else {
+                val newFirst = first.vector ?: listOf(ListItem(scalar = first.scalar))
+                val newSecond = second.vector ?: listOf(ListItem(scalar = second.scalar))
+                val result = checkPair(Pair(newFirst, newSecond))
+                if (result != null) return result
+            }
+        }
+        return null
+    }
+
+    fun readFile(): Day13Solution {
         File(getDataFilePath(13, dft)).forEachLine { parseLine(it) }
         return this
     }
@@ -55,15 +85,13 @@ private class Day13Solution {
 
         ReadState.SECOND_LIST -> {
             secondList = parseLineWithList(inputLine)
+            if (firstList != null && secondList != null) {
+                lists.add(Pair(firstList as List<ListItem>, secondList as List<ListItem>))
+            }
             readState = ReadState.SEPARATOR
         }
 
         ReadState.SEPARATOR -> {
-            if (firstList != null && secondList != null) {
-                lists.add(Pair(firstList as List<ListItem>, secondList as List<ListItem>))
-            }
-            firstList = null
-            secondList = null
             readState = ReadState.FIRST_LIST
         }
     }
