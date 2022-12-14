@@ -26,14 +26,18 @@ import java.io.File
 
 fun solveDay11() {
     for (dft in DataFileType.values()) {
-        val day11Solution = Day11Solution(dft)
-        day11Solution.readFile()
-        day11Solution.solve()
+        val day11Solution1 = Day11Solution(dft)
+        day11Solution1.readFile()
+        day11Solution1.solvePart1()
+
+        val day11Solution2 = Day11Solution(dft)
+        day11Solution2.readFile()
+        day11Solution2.solvePart2()
     }
 }
 
 private class Day11Solution(val dft: DataFileType) {
-    private fun performOperation(operation: String, item: Int): Int {
+    private fun performOperation(operation: String, item: Long): Long {
         return if (operation.contains('*')) {
             val second = operation.split(" * ").last()
             if (second == "old") item * item else item * second.toInt()
@@ -48,26 +52,29 @@ private class Day11Solution(val dft: DataFileType) {
     private fun processMonkey(monkey: Monkey) {
         while (monkey.items.isNotEmpty()) {
             val item = monkey.items.removeFirst()
-            val afterOperation = performOperation(monkey.operation, item)
-            val afterDiv = afterOperation / 3
-            val nextMonkey = if (afterDiv % monkey.test == 0) monkey.ifTrue else monkey.ifFalse
-            monkeys[nextMonkey].items.add(afterDiv)
+            val afterOperation = performOperation(monkey.operation, item) % lcm
+            val nextMonkey = if (afterOperation % monkey.test == 0L) monkey.ifTrue else monkey.ifFalse
+            monkeys[nextMonkey].items.add(afterOperation)
             monkey.inspectedTimes++
         }
     }
 
     private fun runRound() = monkeys.forEach { it -> processMonkey(it) }
 
-    fun solve() {
-        repeat(20) { runRound() }
+    fun solvePart1() = println("Day 11. Data file type: ${dft}/${dft.value}. Part 1: ${solve(20)}.")
+
+    fun solvePart2() = println("Day 11. Data file type: ${dft}/${dft.value}. Part 2: ${solve(10000)}.")
+
+    private fun solve(rounds: Int): Long {
+        repeat(rounds) { runRound() }
         monkeys.sortByDescending { it.inspectedTimes }
-        val result = monkeys[0].inspectedTimes * monkeys[1].inspectedTimes
-        println("Day 11. Data file type: ${dft}/${dft.value}. Part 1: ${result}.")
+        return monkeys[0].inspectedTimes * monkeys[1].inspectedTimes
     }
 
     fun readFile() {
         File(getDataFilePath(11, dft)).forEachLine { parseLine(it) }
         monkeys.add(checkNotNull(currMonkey))
+        lcm = lcm(monkeys.map { it.test }.toLongArray())
     }
 
     private fun parseLine(inputLine: String) {
@@ -78,12 +85,12 @@ private class Day11Solution(val dft: DataFileType) {
         }
         val ensured = checkNotNull(currMonkey)
         if (inputLine.contains("Starting items:")) {
-            val items = inputLine.split(": ").last().split(", ").map { it.toInt() }
+            val items = inputLine.split(": ").last().split(", ").map { it.toLong() }
             currMonkey = ensured.copy(items = items.toMutableList())
         } else if (inputLine.contains("Operation:")) {
             currMonkey = ensured.copy(operation = inputLine.split(" = ").last())
         } else if (inputLine.contains("Test:")) {
-            currMonkey = ensured.copy(test = inputLine.split(" by ").last().toInt())
+            currMonkey = ensured.copy(test = inputLine.split(" by ").last().toLong())
         } else if (inputLine.contains("If true:")) {
             currMonkey = ensured.copy(ifTrue = inputLine.split(" to monkey ").last().toInt())
         } else if (inputLine.contains("If false:")) {
@@ -93,13 +100,14 @@ private class Day11Solution(val dft: DataFileType) {
 
     private var currMonkey: Monkey? = null
     private var monkeys = mutableListOf<Monkey>()
+    private var lcm: Long = 0
 
     private data class Monkey(
-        val items: MutableList<Int> = mutableListOf(),
+        val items: MutableList<Long> = mutableListOf(),
         val operation: String = "×",
-        val test: Int = -1,
+        val test: Long = -1,
         val ifTrue: Int = -1,
         val ifFalse: Int = -1,
-        var inspectedTimes: Int = 0
+        var inspectedTimes: Long = 0
     )
 }

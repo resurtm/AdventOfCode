@@ -34,3 +34,28 @@ fun getDataFilePath(dayCount: Short, dft: DataFileType): String {
     val absPath = Paths.get("").toAbsolutePath().toString()
     return "$absPath/aoc2022/data/day${dayCount.toString().padStart(2, '0')}/input-${dft.value}.txt"
 }
+
+fun gcd(aInp: Long, bInp: Long): Long {
+    var a = aInp
+    var b = bInp
+    while (b > 0) {
+        val temp = b
+        b = a % b // % is remainder
+        a = temp
+    }
+    return a
+}
+
+fun gcd(input: LongArray): Long {
+    var result = input[0]
+    for (i in 1 until input.size) result = gcd(result, input[i])
+    return result
+}
+
+fun lcm(a: Long, b: Long): Long = a * (b / gcd(a, b))
+
+fun lcm(input: LongArray): Long {
+    var result = input[0]
+    for (i in 1 until input.size) result = lcm(result, input[i])
+    return result
+}
