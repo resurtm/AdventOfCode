@@ -27,23 +27,60 @@ import java.io.File
 fun solveDay14() {
     for (dft in DataFileType.values()) {
         val day14Solution = Day14Solution(dft, false)
+
+        day14Solution.resetEnvironment()
         day14Solution.readFile()
-        day14Solution.simulate()
+        day14Solution.simulatePart1()
+
+        day14Solution.resetEnvironment()
+        day14Solution.readFile()
+        day14Solution.simulatePart2()
     }
 }
 
 private class Day14Solution(val dft: DataFileType, val debugOutput: Boolean = false) {
-    fun simulate() {
-        ensureGridSize(sandSource)
+    fun simulatePart2() {
         var sandPiecesCount = 0
         while (true) {
-            if (simulateSandPiece()) break
+            sandPiecesCount++
+            if (simulatePart2SandPiece()) break
+        }
+        println("Day 14. Type: ${dft}/${dft.value}. Part 2: $sandPiecesCount.")
+    }
+
+    private fun simulatePart2SandPiece(): Boolean {
+        var pos = sandSource.copy()
+        var simIters = 0
+        while (true) {
+            if (pos.y + 1 == floorY || grid[pos.x][pos.y + 1].type != NodeType.AIR) {
+                if (pos.y + 1 != floorY && grid[pos.x - 1][pos.y + 1].type == NodeType.AIR) {
+                    pos = pos.copy(x = pos.x - 1)
+                } else if (pos.y + 1 != floorY && grid[pos.x + 1][pos.y + 1].type == NodeType.AIR) {
+                    pos = pos.copy(x = pos.x + 1)
+                } else {
+                    grid[pos.x][pos.y].type = NodeType.SAND
+                    renderMap(drawFloor = true, ignoreCursor = true)
+                    break
+                }
+            }
+            pos = pos.copy(y = pos.y + 1)
+            simIters++
+            cursor = pos.copy()
+            renderMap(drawFloor = true)
+        }
+        return simIters == 0
+    }
+
+    fun simulatePart1() {
+        var sandPiecesCount = 0
+        while (true) {
+            if (simulatePart1SandPiece()) break
             sandPiecesCount++
         }
         println("Day 14. Type: ${dft}/${dft.value}. Part 1: $sandPiecesCount.")
     }
 
-    private fun simulateSandPiece(): Boolean {
+    private fun simulatePart1SandPiece(): Boolean {
         var pos = sandSource.copy()
         while (true) {
             if (grid[pos.x][pos.y + 1].type != NodeType.AIR) {
@@ -53,7 +90,7 @@ private class Day14Solution(val dft: DataFileType, val debugOutput: Boolean = fa
                     pos = pos.copy(x = pos.x + 1)
                 } else {
                     grid[pos.x][pos.y].type = NodeType.SAND
-                    renderMap(true)
+                    renderMap(ignoreCursor = true)
                     break
                 }
             }
@@ -65,11 +102,13 @@ private class Day14Solution(val dft: DataFileType, val debugOutput: Boolean = fa
         return false
     }
 
-    fun renderMap(ignoreCursor: Boolean = false) {
+    fun renderMap(ignoreCursor: Boolean = false, drawFloor: Boolean = false) {
         if (!debugOutput) return
-        for (y in gridSize.first.y..gridSize.second.y) {
+        val endY = if (drawFloor) gridSize.second.y + 2 else gridSize.second.y
+        for (y in gridSize.first.y..endY) {
             for (x in gridSize.first.x..gridSize.second.x) {
                 if (!ignoreCursor && cursor != null && cursor == Point(x, y)) print(NodeType.CURSOR.ch)
+                else if (drawFloor && y == floorY) print(NodeType.ROCK.ch)
                 else print(grid[x][y].type.ch)
             }
             println()
@@ -77,7 +116,12 @@ private class Day14Solution(val dft: DataFileType, val debugOutput: Boolean = fa
         println("-".repeat(40))
     }
 
-    fun readFile() = File(getDataFilePath(14, dft)).forEachLine { parseLine(it) }
+    fun readFile() {
+        File(getDataFilePath(14, dft)).forEachLine { parseLine(it) }
+        ensureGridSize(sandSource)
+    }
+
+    fun resetEnvironment() = grid.forEach { row -> row.forEach { it.type = NodeType.AIR } }
 
     private fun parseLine(inputLine: String) {
         var prevPoint: Point? = null
@@ -115,12 +159,14 @@ private class Day14Solution(val dft: DataFileType, val debugOutput: Boolean = fa
         if (p.x > max.x) max = max.copy(x = p.x)
         if (p.y > max.y) max = max.copy(y = p.y)
         gridSize = Pair(min, max)
+        floorY = gridSize.second.y + 2
     }
 
     private val grid = List(1000) { List(1000) { Node(NodeType.AIR) } }
     private var gridSize = Pair(Point(Int.MAX_VALUE, Int.MAX_VALUE), Point(Int.MIN_VALUE, Int.MIN_VALUE))
     private var sandSource = Point(500, 0)
     private var cursor: Point? = null
+    private var floorY: Int = Int.MIN_VALUE
 
     private data class Node(var type: NodeType)
     private enum class NodeType(val ch: Char) { ROCK('#'), AIR('.'), SAND('o'), CURSOR('*') }
