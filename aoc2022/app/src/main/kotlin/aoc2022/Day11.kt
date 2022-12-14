@@ -25,47 +25,81 @@ package aoc2022
 import java.io.File
 
 fun solveDay11() {
-    val day11Solution = Day11Solution(DataFileType.EXAMPLE)
-    day11Solution.readFile()
-    day11Solution.solve()
+    for (dft in DataFileType.values()) {
+        val day11Solution = Day11Solution(dft)
+        day11Solution.readFile()
+        day11Solution.solve()
+    }
 }
 
 private class Day11Solution(val dft: DataFileType) {
-    fun solve() = monkeys.forEach { println(it) }
+    private fun performOperation(operation: String, item: Int): Int {
+        return if (operation.contains('*')) {
+            val second = operation.split(" * ").last()
+            if (second == "old") item * item else item * second.toInt()
+        } else if (operation.contains('+')) {
+            val second = operation.split(" + ").last()
+            if (second == "old") item + item else item + second.toInt()
+        } else {
+            throw Exception("Unsupported item operation.")
+        }
+    }
+
+    private fun processMonkey(monkey: Monkey) {
+        while (monkey.items.isNotEmpty()) {
+            val item = monkey.items.removeFirst()
+            val afterOperation = performOperation(monkey.operation, item)
+            val afterDiv = afterOperation / 3
+            val nextMonkey = if (afterDiv % monkey.test == 0) monkey.ifTrue else monkey.ifFalse
+            monkeys[nextMonkey].items.add(afterDiv)
+            monkey.inspectedTimes++
+        }
+    }
+
+    private fun runRound() = monkeys.forEach { it -> processMonkey(it) }
+
+    fun solve() {
+        repeat(20) { runRound() }
+        monkeys.sortByDescending { it.inspectedTimes }
+        val result = monkeys[0].inspectedTimes * monkeys[1].inspectedTimes
+        println("Day 11. Data file type: ${dft}/${dft.value}. Part 1: ${result}.")
+    }
 
     fun readFile() {
         File(getDataFilePath(11, dft)).forEachLine { parseLine(it) }
-        monkeys = monkeys.plus(checkNotNull(currMonkey))
+        monkeys.add(checkNotNull(currMonkey))
     }
 
     private fun parseLine(inputLine: String) {
         if (currMonkey == null) {
             currMonkey = Monkey()
         } else if (inputLine.length >= 2 && inputLine.substring(0, 2) != "  ") {
-            monkeys = monkeys.plus(checkNotNull(currMonkey))
+            monkeys.add(checkNotNull(currMonkey))
         }
+        val ensured = checkNotNull(currMonkey)
         if (inputLine.contains("Starting items:")) {
             val items = inputLine.split(": ").last().split(", ").map { it.toInt() }
-            currMonkey = checkNotNull(currMonkey).copy(items = items)
+            currMonkey = ensured.copy(items = items.toMutableList())
         } else if (inputLine.contains("Operation:")) {
-            currMonkey = checkNotNull(currMonkey).copy(operation = inputLine.split(" = ").last())
+            currMonkey = ensured.copy(operation = inputLine.split(" = ").last())
         } else if (inputLine.contains("Test:")) {
-            currMonkey = checkNotNull(currMonkey).copy(test = inputLine.split(" by ").last().toInt())
+            currMonkey = ensured.copy(test = inputLine.split(" by ").last().toInt())
         } else if (inputLine.contains("If true:")) {
-            currMonkey = checkNotNull(currMonkey).copy(ifTrue = inputLine.split(" to monkey ").last())
+            currMonkey = ensured.copy(ifTrue = inputLine.split(" to monkey ").last().toInt())
         } else if (inputLine.contains("If false:")) {
-            currMonkey = checkNotNull(currMonkey).copy(ifFalse = inputLine.split(" to monkey ").last())
+            currMonkey = ensured.copy(ifFalse = inputLine.split(" to monkey ").last().toInt())
         }
     }
 
     private var currMonkey: Monkey? = null
-    private var monkeys = emptyList<Monkey>()
+    private var monkeys = mutableListOf<Monkey>()
 
     private data class Monkey(
-        val items: List<Int> = emptyList(),
-        val operation: String = "",
-        val test: Int = 0,
-        val ifTrue: String = "",
-        val ifFalse: String = ""
+        val items: MutableList<Int> = mutableListOf(),
+        val operation: String = "×",
+        val test: Int = -1,
+        val ifTrue: Int = -1,
+        val ifFalse: Int = -1,
+        var inspectedTimes: Int = 0
     )
 }
