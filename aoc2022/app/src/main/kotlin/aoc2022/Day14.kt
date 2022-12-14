@@ -25,19 +25,56 @@ package aoc2022
 import java.io.File
 
 fun solveDay14() {
-    val day14Solution = Day14Solution(DataFileType.EXAMPLE)
-    day14Solution.readFile()
-    day14Solution.renderMap()
+    for (dft in DataFileType.values()) {
+        val day14Solution = Day14Solution(dft, false)
+        day14Solution.readFile()
+        day14Solution.simulate()
+    }
 }
 
-private class Day14Solution(val dft: DataFileType) {
-    fun renderMap() {
+private class Day14Solution(val dft: DataFileType, val debugOutput: Boolean = false) {
+    fun simulate() {
+        ensureGridSize(sandSource)
+        var sandPiecesCount = 0
+        while (true) {
+            if (simulateSandPiece()) break
+            sandPiecesCount++
+        }
+        println("Day 14. Type: ${dft}/${dft.value}. Part 1: $sandPiecesCount.")
+    }
+
+    private fun simulateSandPiece(): Boolean {
+        var pos = sandSource.copy()
+        while (true) {
+            if (grid[pos.x][pos.y + 1].type != NodeType.AIR) {
+                if (grid[pos.x - 1][pos.y + 1].type == NodeType.AIR) {
+                    pos = pos.copy(x = pos.x - 1)
+                } else if (grid[pos.x + 1][pos.y + 1].type == NodeType.AIR) {
+                    pos = pos.copy(x = pos.x + 1)
+                } else {
+                    grid[pos.x][pos.y].type = NodeType.SAND
+                    renderMap(true)
+                    break
+                }
+            }
+            pos = pos.copy(y = pos.y + 1)
+            cursor = pos.copy()
+            renderMap()
+            if (pos.y >= gridSize.second.y) return true
+        }
+        return false
+    }
+
+    fun renderMap(ignoreCursor: Boolean = false) {
+        if (!debugOutput) return
         for (y in gridSize.first.y..gridSize.second.y) {
             for (x in gridSize.first.x..gridSize.second.x) {
-                print(grid[x][y].type.ch)
+                if (!ignoreCursor && cursor != null && cursor == Point(x, y)) print(NodeType.CURSOR.ch)
+                else print(grid[x][y].type.ch)
             }
             println()
         }
+        println("-".repeat(40))
     }
 
     fun readFile() = File(getDataFilePath(14, dft)).forEachLine { parseLine(it) }
@@ -56,7 +93,7 @@ private class Day14Solution(val dft: DataFileType) {
     private fun fillGrid(start: Point, end: Point) =
         if (start.x == end.x && start.y != end.y) fillGridVertical(start.x, start.y, end.y)
         else if (start.y == end.y && start.x != end.x) fillGridHorizontal(start.y, start.x, end.x)
-        else throw Exception("This kind of fill is not supported.")
+        else throw Exception("This fill type is not supported.")
 
     private fun fillGridVertical(x: Int, startY: Int, endY: Int) {
         val y1 = if (startY < endY) startY else endY
@@ -82,9 +119,11 @@ private class Day14Solution(val dft: DataFileType) {
 
     private val grid = List(1000) { List(1000) { Node(NodeType.AIR) } }
     private var gridSize = Pair(Point(Int.MAX_VALUE, Int.MAX_VALUE), Point(Int.MIN_VALUE, Int.MIN_VALUE))
+    private var sandSource = Point(500, 0)
+    private var cursor: Point? = null
 
     private data class Node(var type: NodeType)
-    private enum class NodeType(val ch: Char) { ROCK('#'), AIR('.'), SAND('+') }
+    private enum class NodeType(val ch: Char) { ROCK('#'), AIR('.'), SAND('o'), CURSOR('*') }
     private data class Point(val x: Int = 0, val y: Int = 0) {
         override fun toString(): String = "${x}×${y}"
     }
