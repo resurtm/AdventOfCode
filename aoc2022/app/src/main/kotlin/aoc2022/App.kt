@@ -43,15 +43,17 @@ fun main() {
 //    solveDay09()
 //    drawSeparator()
 //    solveDay10()
-    drawSeparator()
-    solveDay11()
-    drawSeparator()
+//    drawSeparator()
+//    solveDay11()
+//    drawSeparator()
 //    solveDay12()
 //    drawSeparator()
 //    solveDay13()
 //    drawSeparator()
 //    solveDay14()
-//    drawSeparator()
+    drawSeparator()
+    solveDay15()
+    drawSeparator()
 }
 
 private fun drawSeparator() {
