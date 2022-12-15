@@ -29,17 +29,36 @@ fun solveDay15() {
     val day15Solution1 = Day15Solution(DataFileType.EXAMPLE)
     day15Solution1.readFile()
     day15Solution1.solvePart1(10)
+    day15Solution1.solvePart2(20)
 
     val day15Solution2 = Day15Solution(DataFileType.GITHUB)
     day15Solution2.readFile()
     day15Solution2.solvePart1(2000000)
+    day15Solution2.solvePart2(4000000)
 
     val day15Solution3 = Day15Solution(DataFileType.GOOGLE)
     day15Solution3.readFile()
     day15Solution3.solvePart1(2000000)
+    day15Solution3.solvePart2(4000000)
 }
 
 private class Day15Solution(val dft: DataFileType) {
+    fun solvePart2(maxNeededY: Int) {
+        for (neededY in 0..maxNeededY) {
+            intervals.clear()
+            sensors.forEach { sensor ->
+                calcInterval(sensor, neededY)?.let { intervals.add(it) }
+            }
+            val merged = mergedIntervals()
+            if (merged.size > 1) {
+                val xCoord = merged.first().second.toLong() + 1L
+                val result = xCoord * 4000000 + neededY
+                println("Day 15. Data file type: ${dft}/${dft.value}. Part 2: $result.")
+                break
+            }
+        }
+    }
+
     fun solvePart1(neededY: Int) {
         sensors.forEach { sensor ->
             calcInterval(sensor, neededY)?.let { intervals.add(it) }
