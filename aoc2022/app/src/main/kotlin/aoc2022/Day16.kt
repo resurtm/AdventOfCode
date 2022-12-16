@@ -22,42 +22,34 @@
 
 package aoc2022
 
-fun main() {
-//    drawSeparator()
-//    solveDay01()
-//    drawSeparator()
-//    solveDay02()
-//    drawSeparator()
-//    solveDay03()
-//    drawSeparator()
-//    solveDay04()
-//    drawSeparator()
-//    solveDay05()
-//    drawSeparator()
-//    solveDay06()
-//    drawSeparator()
-//    solveDay07()
-//    drawSeparator()
-//    solveDay08()
-//    drawSeparator()
-//    solveDay09()
-//    drawSeparator()
-//    solveDay10()
-//    drawSeparator()
-//    solveDay11()
-//    drawSeparator()
-//    solveDay12()
-//    drawSeparator()
-//    solveDay13()
-//    drawSeparator()
-//    solveDay14()
-//    drawSeparator()
-//    solveDay15()
-    drawSeparator()
-    solveDay16()
-    drawSeparator()
+import java.io.File
+
+fun solveDay16() {
+    val day16Solution1 = Day16Solution(DataFileType.EXAMPLE)
+    day16Solution1.readFile()
+    day16Solution1.solve()
+
+//    val day16Solution2 = Day16Solution(DataFileType.GITHUB)
+//    day16Solution2.readFile()
+//    day16Solution2.solve()
 }
 
-private fun drawSeparator() {
-    println("=".repeat(20))
+private class Day16Solution(val dft: DataFileType) {
+    fun solve() = valves.forEach { println(it) }
+
+    fun readFile() = File(getDataFilePath(16, dft)).forEachLine { parseLine(it) }
+
+    private fun parseLine(inputLine: String) {
+        val matchResult = lineRegex.matchEntire(inputLine) ?: return
+        val name = matchResult.groups[1]?.value ?: return
+        val rate = matchResult.groups[2]?.value?.toInt() ?: return
+        val rawNext = matchResult.groups[3]?.value ?: return
+        val next = rawNext.trim().split(", ")
+        valves = valves.plus(Valve(name, rate, next))
+    }
+
+    private var valves = emptyList<Valve>()
+    private val lineRegex = Regex("Valve ([A-Z]{2}) has flow rate=(\\d+); tunnels? leads? to valves? (.*)")
+
+    private data class Valve(val name: String, val flow: Int, val next: List<String>)
 }
